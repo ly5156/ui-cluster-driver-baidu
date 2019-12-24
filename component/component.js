@@ -92,7 +92,6 @@ export default Ember.Component.extend(ClusterDriver, {
 /*!!!!!!!!!!!DO NOT CHANGE END!!!!!!!!!!!*/
   intl:              service(),
   layout:            null,
-  configField:       'baiduEngineConfig',
   versionChoices:    [],
   subnetChoices:     [],
   zoneChoices:       [],
@@ -126,7 +125,7 @@ export default Ember.Component.extend(ClusterDriver, {
     const lang = get(this, 'session.language');
     get(this, 'intl.locale');
     this.loadLanguage(lang);
-    let config      = get(this, 'config');
+    let config      = get(this, 'engineConfig');
     let configField = get(this, 'configField');
 
 
@@ -161,7 +160,7 @@ export default Ember.Component.extend(ClusterDriver, {
       set(this, 'cluster.%%DRIVERNAME%%EngineConfig', config);
     }
     // init cdsConfig
-    const [cdsConfig] = get(this, 'config.cdsConfig') || [];
+    const [cdsConfig] = get(this, 'engineConfig.cdsConfig') || [];
 
     if (cdsConfig) {
       const cds = cdsConfig.split(':');
@@ -177,29 +176,29 @@ export default Ember.Component.extend(ClusterDriver, {
       });
     }
     // init cpu and memory
-    const { cpu, memory } = get(this, 'config');
+    const { cpu, memory } = get(this, 'engineConfig');
 
     if (cpu && memory) {
-      set(this, 'instanceConfig', `${ get(this, 'config.cpu') }/${ get(this, 'config.memory') }`);
+      set(this, 'instanceConfig', `${ get(this, 'engineConfig.cpu') }/${ get(this, 'engineConfig.memory') }`);
     }
   },
 
-  config: alias('cluster.%%DRIVERNAME%%EngineConfig'),
+  engineConfig: alias('cluster.%%DRIVERNAME%%EngineConfig'),
 
 
   actions: {
     baiduLogin(cb) {
       setProperties(this, {
         'errors':           null,
-        'config.accessKey':  (get(this, 'config.accessKey') || '').trim(),
-        'config.secretKey': (get(this, 'config.secretKey') || '').trim(),
+        'engineConfig.accessKey':  (get(this, 'engineConfig.accessKey') || '').trim(),
+        'engineConfig.secretKey': (get(this, 'engineConfig.secretKey') || '').trim(),
       });
       const errors = get(this, 'errors') || [];
       const intl = get(this, 'intl');
 
-      const accessKey = get(this, 'config.accessKey');
-      const secretKey = get(this, 'config.secretKey');
-      const region = get(this, 'config.region');
+      const accessKey = get(this, 'engineConfig.accessKey');
+      const secretKey = get(this, 'engineConfig.secretKey');
+      const region = get(this, 'engineConfig.region');
 
       if ( !accessKey ) {
         errors.push(intl.t('clusterNew.baiducce.accessKey.required'));
@@ -241,7 +240,7 @@ export default Ember.Component.extend(ClusterDriver, {
 
       const {
         region, vpcId, nodeCount, clusterVersion
-      } = get(this, 'config');
+      } = get(this, 'engineConfig');
 
       if ( !vpcId ) {
         errors.push(intl.t('clusterNew.baiducce.vpc.required'));
@@ -287,7 +286,7 @@ export default Ember.Component.extend(ClusterDriver, {
 
       const {
         zone, subnetId, region, vpcId, instanceType, containerCidr
-      } = get(this, 'config');
+      } = get(this, 'engineConfig');
 
       const cidrIPV4RegExp = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/\d{1,2}$/;
 
@@ -312,13 +311,13 @@ export default Ember.Component.extend(ClusterDriver, {
       
       if (instanceConfig.raw && (cpu && parseInt(cpu, 10) > 0 && memory && parseInt(memory, 10) > 0)) {
         const config = {
-          'config.cpu':    parseInt(cpu, 10),
-          'config.memory': parseInt(memory, 10)
+          'engineConfig.cpu':    parseInt(cpu, 10),
+          'engineConfig.memory': parseInt(memory, 10)
         };
         if (instanceType === 9) {
-          config['config.gpuCard'] = gpuType;
-          config['config.gpuCount'] = parseInt(gpuCount, 10);
-          config['config.diskSize'] = instanceConfig.raw.ephemeralDiskInGb;
+          config['engineConfig.gpuCard'] = gpuType;
+          config['engineConfig.gpuCount'] = parseInt(gpuCount, 10);
+          config['engineConfig.diskSize'] = instanceConfig.raw.ephemeralDiskInGb;
         }
         setProperties(this, config);
       } else {
@@ -382,10 +381,10 @@ export default Ember.Component.extend(ClusterDriver, {
 
       const {
         nodeCount, clusterVersion, cdsConfig
-      } = get(this, 'config');
+      } = get(this, 'engineConfig');
 
       if (!cdsConfig) {
-        set(this, 'config.cdsConfig', []);
+        set(this, 'engineConfig.cdsConfig', []);
       }
 
       if ( !nodeCount ) {
@@ -421,7 +420,7 @@ export default Ember.Component.extend(ClusterDriver, {
       const errors = get(this, 'errors') || [];
       const intl = get(this, 'intl');
 
-      const { securityGroupId, bandwidthInMbps } = get(this, 'config') ;
+      const { securityGroupId, bandwidthInMbps } = get(this, 'engineConfig') ;
       const { type, value } = get(this, 'cdsConfig');
 
       if ( !securityGroupId ) {
@@ -448,15 +447,15 @@ export default Ember.Component.extend(ClusterDriver, {
       }
       const pwd = this.genPw();
 
-      set(this, 'config.adminPass', pwd);
-      set(this, 'config.adminPassConfirm', pwd);
+      set(this, 'engineConfig.adminPass', pwd);
+      set(this, 'engineConfig.adminPassConfirm', pwd);
 
       
 
       if (type && value) {
-        set(this, 'config.cdsConfig', [`${ type.toLowerCase() }:${ value }`]);
+        set(this, 'engineConfig.cdsConfig', [`${ type.toLowerCase() }:${ value }`]);
       }  else {
-        set(this, 'config.cdsConfig', []);
+        set(this, 'engineConfig.cdsConfig', []);
       }
       
       this.send('driverSave', cb);
@@ -467,8 +466,8 @@ export default Ember.Component.extend(ClusterDriver, {
     },
     cpuAndMemoryChanged(item) {
       setProperties(this, {
-        'config.cpu':    item.raw.cpuCount,
-        'config.memory': item.raw.memoryCapacityInGB
+        'engineConfig.cpu':    item.raw.cpuCount,
+        'engineConfig.memory': item.raw.memoryCapacityInGB
       });
     }
   },
@@ -485,7 +484,7 @@ export default Ember.Component.extend(ClusterDriver, {
     // Add more specific errors
 
     // Check something and add an error entry if it fails:
-    // if ( parseInt(get(this, 'config.memorySize'), defaultRadix) < defaultBase ) {
+    // if ( parseInt(get(this, 'engineConfig.memorySize'), defaultRadix) < defaultBase ) {
     //   errors.push('Memory Size must be at least 1024 MB');
     // }
 
@@ -567,30 +566,30 @@ export default Ember.Component.extend(ClusterDriver, {
     });
   },
 
-  zoneDidChanged: observer('config.region', 'config.zone', 'config.vpcId', 'instanceTypeChoices', function() {
-    const region = get(this, 'config.region');
-    const zone = get(this, 'config.zone');
-    const vpcId = get(this, 'config.vpcId');
+  zoneDidChanged: observer('engineConfig.region', 'engineConfig.zone', 'engineConfig.vpcId', 'instanceTypeChoices', function() {
+    const region = get(this, 'engineConfig.region');
+    const zone = get(this, 'engineConfig.zone');
+    const vpcId = get(this, 'engineConfig.vpcId');
     const zoneChoices = get(this, 'zoneChoices') || [];
     const foundZone = zoneChoices.find((z) => z.value === zone);
 
     if (region && zone && foundZone && vpcId) {
       this.loadSubnets(region, vpcId, `cn-${ region }-${ foundZone.value.substr(4).toLowerCase() }`);
     }
-    const instanceType = get(this, 'config.instanceType');
+    const instanceType = get(this, 'engineConfig.instanceType');
     const instanceTypeChoices = get(this, 'instanceTypeChoices');
 
     if (instanceTypeChoices.length) {
       const found = instanceTypeChoices.find((it) => it.value === instanceType);
 
       if (!found) {
-        set(this, 'config.instanceType', null);
+        set(this, 'engineConfig.instanceType', null);
       }
     }
   }),
-  vpcDidChanged: observer('config.region', 'config.vpcId', function() {
+  vpcDidChanged: observer('engineConfig.region', 'engineConfig.vpcId', function() {
     const region = get(this, 'region');
-    const vpcId = get(this, 'config.vpcId');
+    const vpcId = get(this, 'engineConfig.vpcId');
 
     if (region && vpcId) {
       this.loadSecurityGroups(region, vpcId);
@@ -599,11 +598,11 @@ export default Ember.Component.extend(ClusterDriver, {
   clusterNameDidChange: observer('cluster.name', function() {
     const clusterName = get(this, 'cluster.name');
 
-    set(this, 'config.clusterName', clusterName);
-    set(this, 'config.eipName', clusterName);
+    set(this, 'engineConfig.clusterName', clusterName);
+    set(this, 'engineConfig.eipName', clusterName);
   }),
-  cdsConfigDidChanged: observer('config.cdsConfig', 'cdsTypeChoices', function() {
-    const [cdsConfig] = get(this, 'config.cdsConfig') || [];
+  cdsConfigDidChanged: observer('engineConfig.cdsConfig', 'cdsTypeChoices', function() {
+    const [cdsConfig] = get(this, 'engineConfig.cdsConfig') || [];
     const cdsTypeChoices = get(this, 'cdsTypeChoices') || [];
     if (!cdsConfig) {
       setProperties(this, {
@@ -621,7 +620,7 @@ export default Ember.Component.extend(ClusterDriver, {
       set(this, 'cdsConfig.type', '');
     }
   }),
-  instanceConfigDidChanged: observer('config.cpu', 'config.memory','config.gpuCard', 'config.gpuCount', 'instanceConfigChoices', 'instanceTypeChoices', function() {
+  instanceConfigDidChanged: observer('engineConfig.cpu', 'engineConfig.memory','engineConfig.gpuCard', 'engineConfig.gpuCount', 'instanceConfigChoices', 'instanceTypeChoices', function() {
     const instanceConfig = get(this, 'instanceConfig');
     const instanceConfigChoices = get(this, 'instanceConfigChoices') || [];
     const found = instanceConfigChoices.find((item) => item.value === instanceConfig);
@@ -631,66 +630,66 @@ export default Ember.Component.extend(ClusterDriver, {
   }),
   instanceTypeChoicesDidChanged: observer('instanceTypeChoices', function() {
     const instanceTypeChoices = get(this, 'instanceTypeChoices') || [];
-    const instanceType = get(this, 'config.instanceType');
+    const instanceType = get(this, 'engineConfig.instanceType');
     const found = instanceTypeChoices.find((t) => t.value === instanceType);
 
     if (!found && instanceTypeChoices.length > 0) {
-      set(this, 'config.instanceType', instanceTypeChoices[0].value);
+      set(this, 'engineConfig.instanceType', instanceTypeChoices[0].value);
     }
   }),
-  subProductTypeDidChanged: observer('config.subProductType', function() {
-    const type = get(this, 'config.subProductType');
+  subProductTypeDidChanged: observer('engineConfig.subProductType', function() {
+    const type = get(this, 'engineConfig.subProductType');
     const bandWidthChoices = get(this, 'bandWidthChoices');
-    set(this, 'config.bandwidthInMbps', bandWidthChoices.find((bw) => bw.value === type).defaultValue);
+    set(this, 'engineConfig.bandwidthInMbps', bandWidthChoices.find((bw) => bw.value === type).defaultValue);
   }),
   regionChoices: Object.entries(regionMap).map((e) => ({
     label: e[1],
     value: e[0]
   })),
-  selectedRegion: computed('config.region', function() {
-    const region = get(this, 'config.region');
+  selectedRegion: computed('engineConfig.region', function() {
+    const region = get(this, 'engineConfig.region');
 
     return region && regionMap[region];
   }),
-  selectedVpc: computed('config.vpcId', function() {
-    const vpcId = get(this, 'config.vpcId');
+  selectedVpc: computed('engineConfig.vpcId', function() {
+    const vpcId = get(this, 'engineConfig.vpcId');
     const vpcChoices = get(this, 'vpcChoices') || [];
     const found = vpcChoices.find((vpc) => vpc.value === vpcId );
 
     return found && found.label;
   }),
-  selectedSubnet: computed('config.subnetId', 'subnetChoices', function() {
-    const subnetId = get(this, 'config.subnetId');
+  selectedSubnet: computed('engineConfig.subnetId', 'subnetChoices', function() {
+    const subnetId = get(this, 'engineConfig.subnetId');
     const subnetChoices = get(this, 'subnetChoices') || [];
     const found = subnetChoices.find((subnet) => subnet.value === subnetId);
 
     return found && found.label;
   }),
-  selectedSecurityGroup: computed('config.subnetId', function() {
-    const securityGroupId = get(this, 'config.securityGroupId');
+  selectedSecurityGroup: computed('engineConfig.subnetId', function() {
+    const securityGroupId = get(this, 'engineConfig.securityGroupId');
     const sgChoices = get(this, 'sgChoices') || [];
     const found = sgChoices.find((sg) => sg.value === securityGroupId);
 
     return found && found.label;
   }),
-  selectedBandWidthBillingMethod: computed('config.subProductType', 'bandWidthChoices', function() {
+  selectedBandWidthBillingMethod: computed('engineConfig.subProductType', 'bandWidthChoices', function() {
     const intl = get(this, 'intl');
-    const m = get(this, 'config.subProductType');
+    const m = get(this, 'engineConfig.subProductType');
     const bandWidthChoices = get(this, 'bandWidthChoices') || [];
     const found = bandWidthChoices.find((bw) => bw.value === m);
 
     return found && intl.t(found.label);
   }),
-  selectedImage: computed('config.imageId', function() {
-    const imageId = get(this, 'config.imageId');
+  selectedImage: computed('engineConfig.imageId', function() {
+    const imageId = get(this, 'engineConfig.imageId');
     const imageChioces = get(this, 'imageChioces');
     const found = imageChioces.find((image) => image.value === imageId);
 
     return found && found.label;
   }),
-  selecteInstanceType: computed('config.instanceType', 'config.zone', function() {
-    const instanceType = get(this, 'config.instanceType');
-    const zone = get(this, 'config.zone');
+  selecteInstanceType: computed('engineConfig.instanceType', 'engineConfig.zone', function() {
+    const instanceType = get(this, 'engineConfig.instanceType');
+    const zone = get(this, 'engineConfig.zone');
     const instanceTypeChoices = get(this, 'instanceTypeChoices') || [];
     const found = instanceTypeChoices.find((it) => it.value === instanceType && it.zone === zone);
 
@@ -703,14 +702,14 @@ export default Ember.Component.extend(ClusterDriver, {
 
     return found || {};
   }),
-  maxBandWidth: computed('config.subProductType', function() {
-    const t = get(this, 'config.subProductType');
+  maxBandWidth: computed('engineConfig.subProductType', function() {
+    const t = get(this, 'engineConfig.subProductType');
 
     return t === 'netraffic' ? 1000 : 200;
   }),
-  instanceTypeChoices: computed('config.zone', 'zoneResources', function() {
+  instanceTypeChoices: computed('engineConfig.zone', 'zoneResources', function() {
     const zoneResources = get(this, 'zoneResources') || [];
-    const zone = get(this, 'config.zone');
+    const zone = get(this, 'engineConfig.zone');
     const found = zoneResources.find((r) => r.physicalZone === zone);
 
     if (!found) {
@@ -724,9 +723,9 @@ export default Ember.Component.extend(ClusterDriver, {
       zone:    found.physicalZone
     }));
   }),
-  instanceConfigChoices: computed('config.instanceType', 'config.zone', 'instanceTypeChoices', function() {
-    const instanceType = get(this, 'config.instanceType');
-    const zone = get(this, 'config.zone');
+  instanceConfigChoices: computed('engineConfig.instanceType', 'engineConfig.zone', 'instanceTypeChoices', function() {
+    const instanceType = get(this, 'engineConfig.instanceType');
+    const zone = get(this, 'engineConfig.zone');
     const instanceTypeChoices = get(this, 'instanceTypeChoices') || [];
 
     const found = instanceTypeChoices.find((it) => it.value === instanceType && it.zone === zone);
@@ -748,9 +747,9 @@ export default Ember.Component.extend(ClusterDriver, {
       raw:    f
     }));
   }),
-  cdsTypeChoices: computed('config.zone', 'zoneResources', function() {
+  cdsTypeChoices: computed('engineConfig.zone', 'zoneResources', function() {
     const zoneResources = get(this, 'zoneResources') || [];
-    const zone = get(this, 'config.zone');
+    const zone = get(this, 'engineConfig.zone');
 
     const found = zoneResources.find((r) => r.physicalZone === zone);
 
@@ -769,8 +768,8 @@ export default Ember.Component.extend(ClusterDriver, {
       value: cds.storageType
     }))];
   }),
-  isGPU: computed('config.instanceType', function() {
-    return get(this, 'config.instanceType') === 9;
+  isGPU: computed('engineConfig.instanceType', function() {
+    return get(this, 'engineConfig.instanceType') === 9;
   }),
   localDiskSizeLabel: computed('isGPU', 'selectedInstanceConfig', 'intl.locale', function() {
     const config = get(this, 'selectedInstanceConfig');
@@ -782,7 +781,7 @@ export default Ember.Component.extend(ClusterDriver, {
   }),
   upgradableVersions: computed('versionChoices', function() {
     const versions = get(this, 'versionChoices');
-    const currentVersion = get(this, 'config.clusterVersion');
+    const currentVersion = get(this, 'engineConfig.clusterVersion');
     if (!currentVersion) {
       return [];
     }
@@ -842,10 +841,10 @@ export default Ember.Component.extend(ClusterDriver, {
 
       prop.zoneChoices = zones;
 
-      if (!get(this, 'config.zone') && zones.length > 0) {
+      if (!get(this, 'engineConfig.zone') && zones.length > 0) {
         const zone = zones.find((z) => z.defaultZone === true) || zones[0];
 
-        prop['config.zone'] = zone.value;
+        prop['engineConfig.zone'] = zone.value;
       }
       setProperties(this, prop);
 
@@ -863,10 +862,10 @@ export default Ember.Component.extend(ClusterDriver, {
         label: d,
         value: d,
       })));
-      const clusterVersion = get(this, 'config.clusterVersion');
+      const clusterVersion = get(this, 'engineConfig.clusterVersion');
 
       if (!clusterVersion && get(this, 'versionChoices.length')) {
-        set(this, 'config.clusterVersion', get(this, 'versionChoices.firstObject.value'));
+        set(this, 'engineConfig.clusterVersion', get(this, 'versionChoices.firstObject.value'));
       }
 
       return data;
@@ -885,8 +884,8 @@ export default Ember.Component.extend(ClusterDriver, {
       }));
     }).then((sgs) => {
       set(this, 'sgChoices', sgs);
-      if (!get(this, 'config.securityGroupId') && get(this, 'sgChoices.length')) {
-        set(this, 'config.securityGroupId', get(this, 'sgChoices.firstObject.value'));
+      if (!get(this, 'engineConfig.securityGroupId') && get(this, 'sgChoices.length')) {
+        set(this, 'engineConfig.securityGroupId', get(this, 'sgChoices.firstObject.value'));
       }
     });
   },
@@ -950,7 +949,7 @@ export default Ember.Component.extend(ClusterDriver, {
 
       set(this, 'allImages', allImages);
 
-      const instanceType = get(this, 'config.instanceType');
+      const instanceType = get(this, 'engineConfig.instanceType');
 
       if (instanceType === 9) { // GPU instance
         set(this, 'imageChioces', [...gpuImages, ...gpuCustomImages].map((image) => ({
@@ -966,9 +965,9 @@ export default Ember.Component.extend(ClusterDriver, {
 
       if (get(this, 'imageChioces.length')) {
         const imageChioces = get(this, 'imageChioces');
-        set(this, 'config.imageId', get(imageChioces, 'firstObject.value'));
+        set(this, 'engineConfig.imageId', get(imageChioces, 'firstObject.value'));
       } else {
-        set(this, 'config.imageId', null);
+        set(this, 'engineConfig.imageId', null);
       }
     });
   },
@@ -990,9 +989,9 @@ export default Ember.Component.extend(ClusterDriver, {
       set(this, 'subnetChoices', subnets);
 
       if (get(this, 'subnetChoices.length')) {
-        set(this, 'config.subnetId', get(subnets, 'firstObject.value'));
+        set(this, 'engineConfig.subnetId', get(subnets, 'firstObject.value'));
       } else {
-        set(this, 'config.subnetId', null);
+        set(this, 'engineConfig.subnetId', null);
       }
 
       return subnets;
@@ -1010,8 +1009,8 @@ export default Ember.Component.extend(ClusterDriver, {
       }));
     }).then((vpcs) => {
       set(this, 'vpcChoices', vpcs);
-      if (!get(this, 'config.vpcId') && get(this, 'vpcChoices.length')) {
-        set(this, 'config.vpcId', get(this, 'vpcChoices.firstObject.value'));
+      if (!get(this, 'engineConfig.vpcId') && get(this, 'vpcChoices.length')) {
+        set(this, 'engineConfig.vpcId', get(this, 'vpcChoices.firstObject.value'));
       }
 
       return vpcs;
@@ -1037,8 +1036,8 @@ export default Ember.Component.extend(ClusterDriver, {
     };
     const { headers: signedHeaders, cHeadersStr: canonicalHeaders } = this.getCanonicalHeaders(headers);
     const canonicalRequest = [method.toUpperCase(), canonicalURI, canonicalQueryString, canonicalHeaders].join('\n');
-    const secretKey = get(this, 'config.secretKey');
-    const accessKey = get(this, 'config.accessKey');
+    const secretKey = get(this, 'engineConfig.secretKey');
+    const accessKey = get(this, 'engineConfig.accessKey');
     const signingKey = this.hmacSha256Hex(secretKey, `bce-auth-v1/${ accessKey }/${ timestamp }/${ expirationPeriodInSeconds }`);
     const signature = this.hmacSha256Hex(signingKey, canonicalRequest);
     const authStr = `bce-auth-v1/${ accessKey }/${ timestamp }/${ expirationPeriodInSeconds }/${ signedHeaders }/${ signature }`;
