@@ -554,7 +554,11 @@ export default Ember.Component.extend(ClusterDriver, {
   loadLanguage(lang) {
     const translation = languages[lang] || languages['en-us'];
     const intl = get(this, 'intl');
-    intl.addTranslation(lang, 'clusterNew.baiducce', translation.clusterNew.baiducce);
+    if (intl.addTranslation) {
+      intl.addTranslation(lang, 'clusterNew.baiducce', translation.clusterNew.baiducce);
+    } else {
+      intl.addTranslations(lang, translation);
+    }
     intl.translationsFor(lang);
     set(this, 'refresh', false);
     next(() => {
